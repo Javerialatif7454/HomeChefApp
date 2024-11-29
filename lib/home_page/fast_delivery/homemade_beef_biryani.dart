@@ -1,7 +1,80 @@
 import 'package:flutter/material.dart';
+import '../../database_helper/add_to_cart.dart';
+import '../../model/addtocart.dart';
 
 class HomemadeBeefBiryani extends StatelessWidget {
   const HomemadeBeefBiryani({super.key});
+
+  void _showProductDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Homemade Beef Biryani', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/shop_categories/biryani/Sindhi Biryani.jpeg',
+                    width: 150,
+                    height: 150,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Rs. 1299',
+                style: TextStyle(fontSize: 18, color: Colors.green[700]),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'A delicious and flavorful Homemade Beef Biryani made with tender beef, aromatic spices, and basmati rice.',
+                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+              ),
+              SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerRight,
+                child: ElevatedButton(
+                  onPressed: () {
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                    backgroundColor: Color(0xff2C3E50), // Button color
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    'Place Order',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void addToCart(BuildContext context) async {
+    CartItem newItem = CartItem(
+      imagePath: 'assets/images/shop_categories/biryani/Sindhi Biryani.jpeg', // Image path
+      title: 'Homemade Beef Biryani',
+      price: '1299',
+      quantity: 1,
+    );
+
+    await DbHelper.insertCartItem(newItem);
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Homemade Beef Biryani added to cart!'),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,28 +102,29 @@ class HomemadeBeefBiryani extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // First container with image
-              Container(
-                width: 350, // Set the width of the container
-                height: 450, // Set the height of the container
-                decoration: BoxDecoration(
-                  color: Colors.white, // Set background color to white
-                  borderRadius: BorderRadius.circular(10), // Optional: rounded corners
-                ),
-                child: Center(
-                  child: ClipOval(
-                    child: Image.asset(
-                      'assets/images/shop_categories/biryani/Sindhi Biryani.jpeg', // Your image path
-                      width: 300, // Set the width of the image (can adjust as needed)
-                      height: 270, // Set the height of the image (must be the same as width for perfect circle)
-                      fit: BoxFit.cover, // Ensures the image covers the circular area without distortion
+              GestureDetector(
+                onTap: () => _showProductDialog(context),
+                child: Container(
+                  width: 350,
+                  height: 450,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/images/shop_categories/biryani/Sindhi Biryani.jpeg',
+                        width: 300,
+                        height: 270,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: 16), // Spacing between image and description container
+              SizedBox(height: 16),
 
-              // Description container
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -68,31 +142,28 @@ class HomemadeBeefBiryani extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Description heading
                     Text(
-                      'Description', // Heading for the description
+                      'Description',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
                     ),
-                    SizedBox(height: 8), // Spacing between heading and text
-                    // Description text
+                    SizedBox(height: 8),
                     Text(
-                      'This Homemade Beef Biryani is made with tender beef, aromatic spices, and basmati rice, offering a rich and flavorful experience. Perfect for a satisfying meal.',
+                      'This Homemade Beef Biryani is made with tender beef, aromatic spices, and basmati rice, offering a rich and flavorful experience.',
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.grey[800],
                       ),
-                      textAlign: TextAlign.justify, // Text alignment for better readability
+                      textAlign: TextAlign.justify,
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 16), // Spacing between description and "Add to Cart" container
+              SizedBox(height: 16),
 
-              // Second container with text and add to cart button
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -111,32 +182,29 @@ class HomemadeBeefBiryani extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Homemade Beef Biryani', // Product name
+                      'Homemade Beef Biryani',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
                     ),
-                    SizedBox(height: 8), // Spacing between name and price
+                    SizedBox(height: 8),
                     Text(
-                      '\$12.99', // Product price
+                      'Rs. 1299',
                       style: TextStyle(
                         fontSize: 18,
                         color: Colors.green[700],
                       ),
                     ),
-                    SizedBox(height: 16), // Spacing between price and button
+                    SizedBox(height: 16),
                     Align(
                       alignment: Alignment.centerRight,
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Add to cart logic here
-                        },
+                        onPressed: () => addToCart(context),
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
                           backgroundColor: Color(0xff2C3E50),
-                          // Button color
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),

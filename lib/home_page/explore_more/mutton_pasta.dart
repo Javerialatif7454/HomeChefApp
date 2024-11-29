@@ -1,128 +1,317 @@
 import 'package:flutter/material.dart';
+import '../../database_helper/add_to_cart.dart';
+import '../../database_helper/cheken_tika.dart';
+import '../../model/addtocart.dart';
 
-class MuttonPasta extends StatelessWidget {
+class MuttonPasta extends StatefulWidget {
   const MuttonPasta({super.key});
 
-  void toggleFavorite() {
-    // Add your favorite action here
+  @override
+  State<MuttonPasta> createState() => _MuttonPastaState();
+}
+
+class _MuttonPastaState extends State<MuttonPasta> {
+  List<Map<String, String>> favoriteItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    loadFavoriteItems();
+  }
+
+  Future<void> loadFavoriteItems() async {
+    final items = await DBHelper.getItems();
+    setState(() {
+      favoriteItems = items
+          .map((item) => {
+        'imagePath': item['imagePath'] as String,
+        'title': item['title'] as String,
+        'price': item['price'] as String,
+      })
+          .toList();
+    });
+  }
+
+  void toggleFavorite(
+      String imagePath, String title, String price, bool isFavorite) async {
+    if (isFavorite) {
+      await DBHelper.insertItem(imagePath, title, price);
+      setState(() {
+        favoriteItems.add({'imagePath': imagePath, 'title': title, 'price': price});
+      });
+    } else {
+      await DBHelper.deleteItem(imagePath);
+      setState(() {
+        favoriteItems.removeWhere((item) => item['imagePath'] == imagePath);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Mutton Pasta")),
+      appBar: AppBar(title: const Text("Mutton Pasta")),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            pastaCardItem('assets/images/shop_categories/pasta/Mutton Pasta.jpeg', 'Mutton Pasta', '\$10.99', toggleFavorite),
-            SizedBox(height: 10),
-            pastaCardItem('assets/images/shop_categories/pasta/Chicken Tikka Pasta.jpeg', 'Chicken Tikka Pasta', '\$10.99', toggleFavorite),
-            SizedBox(height: 10),
-            pastaCardItem('assets/images/shop_categories/pasta/Mac and Cheese.jpeg', 'Mac and Cheese Pasta', '\$10.99', toggleFavorite),
-            SizedBox(height: 10),
-            pastaCardItem('assets/images/shop_categories/pasta/Spaghetti Bolognese.jpeg', 'Spaghetti Pasta', '\$12.99', toggleFavorite),
+            dealContainer(
+              context,
+              'assets/images/shop_categories/pasta/Mutton Pasta.jpeg',
+              'Mutton Pasta',
+              'Rs. 1299',
+              'A flavorful and spicy pasta with mutton chunks and rich sauces.',
+            ),
+            dealContainer(
+              context,
+              'assets/images/shop_categories/pasta/Chicken Tikka Pasta.jpeg',
+              'Chicken Tikka Pasta',
+              'Rs. 1199',
+              'A delicious pasta with grilled chicken tikka, onions, and spices.',
+            ),
+            dealContainer(
+              context,
+              'assets/images/shop_categories/pasta/Mac and Cheese.jpeg',
+              'Mac and Cheese Pasta',
+              'Rs. 999',
+              'A creamy and cheesy pasta with a delicious blend of flavors.',
+            ),
+            dealContainer(
+              context,
+              'assets/images/shop_categories/pasta/Spaghetti Bolognese.jpeg',
+              'Spaghetti Pasta',
+              'Rs. 1399',
+              'A classic spaghetti pasta with a savory bolognese sauce.',
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget pastaCardItem(String imagePath, String title, String price, VoidCallback toggleFavorite) {
+  Widget dealContainer(
+      BuildContext context, String imagePath, String productName, String price, String description) {
+    void addToCart() async {
+      CartItem newItem = CartItem(
+        imagePath: imagePath,
+        title: productName,
+        price: price,
+        quantity: 1,
+      );
+      await DbHelper.insertCartItem(newItem);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$productName added to cart!')),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: Container(
-        height: 135,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
-              blurRadius: 5,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                imagePath,
-                width: 120,
-                height: 120,
-                fit: BoxFit.cover,
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProductDetailScreen(
+                productName: productName,
+                price: price,
+                imagePath: imagePath,
+                description: description,
               ),
             ),
-            SizedBox(width: 15), // Space between image and text
-            Expanded(
-              child: Stack(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0, right: 8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          title,
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 5),
-                        Row(
-                          children: [
-                            Icon(Icons.timer, color: Colors.green, size: 16),
-                            SizedBox(width: 5),
-                            Text(
-                              '10-15 mins',
-                              style: TextStyle(fontSize: 12, color: Colors.green[700]),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 5),
-                        Text(
-                          'Previous Price: $price',
-                          style: TextStyle(fontSize: 12, color: Colors.grey, decoration: TextDecoration.lineThrough),
-                        ),
-                        SizedBox(height: 7),
-                        SizedBox(
-                          width: 168,
-                          height: 40,
-                          child: ElevatedButton(
-                            onPressed: () {},
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xff2C3E50),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+          );
+        },
+        child: Container(
+          height: 135,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.3),
+                blurRadius: 5,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  imagePath,
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0, right: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            productName,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: Colors.black),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 5),
+                          Row(
+                            children: [
+                              const Icon(Icons.timer,
+                                  color: Colors.green, size: 16),
+                              const SizedBox(width: 5),
+                              Text(
+                                '10-15 mins',
+                                style: TextStyle(
+                                    fontSize: 12, color: Colors.green[700]),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            price,
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black),
+                          ),
+                          const SizedBox(height: 7),
+                          Center(
+                            child: SizedBox(
+                              width: 140,
+                              height: 40,
+                              child: ElevatedButton(
+                                onPressed: addToCart,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xff2C3E50),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Add to Cart',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold),
+                                ),
                               ),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.card_giftcard, color: Colors.white, size: 18),
-                                SizedBox(width: 5),
-                                Text(
-                                  'Gift: Free Delivery',
-                                  style: TextStyle(color: Colors.white, fontSize: 12),
-                                ),
-                              ],
-                            ),
                           ),
+                        ],
+                      ),
+                    ),
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: IconButton(
+                        icon: Icon(
+                          favoriteItems.any((item) => item['imagePath'] == imagePath)
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          color: favoriteItems.any((item) => item['imagePath'] == imagePath)
+                              ? Colors.green
+                              : Colors.black,
                         ),
-                      ],
+                        onPressed: () {
+                          final isFavorite = favoriteItems
+                              .any((item) => item['imagePath'] == imagePath);
+                          toggleFavorite(imagePath, productName, price, !isFavorite);
+                        },
+                      ),
                     ),
-                  ),
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: IconButton(
-                      icon: Icon(Icons.favorite_border, color: Colors.black),
-                      onPressed: toggleFavorite,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+class ProductDetailScreen extends StatelessWidget {
+  final String productName;
+  final String price;
+  final String imagePath;
+  final String description;
+
+  const ProductDetailScreen({
+    required this.productName,
+    required this.price,
+    required this.imagePath,
+    required this.description,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(productName),
+        backgroundColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: ClipOval(
+                child: Image.asset(
+                  imagePath,
+                  width: 250,
+                  height: 250,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              productName,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              price,
+              style: TextStyle(fontSize: 20, color: Colors.green[700]),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              description,
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 20),
+            Align(
+              alignment: Alignment.center,
+              child: ElevatedButton(
+                onPressed: () {
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  backgroundColor: const Color(0xff2C3E50),
+                ),
+                child: const Text(
+                  'Order Now',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
               ),
             ),
           ],

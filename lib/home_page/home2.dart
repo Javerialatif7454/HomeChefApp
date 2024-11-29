@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:newfyp/home_page/bottom_navigation_bar/user_Account.dart';
+
+import 'package:flutter/material.dart';
+import 'package:newfyp/home_page/bottom_navigation_bar/myaccount/cart.dart';
+import 'package:newfyp/home_page/bottom_navigation_bar/myaccount/user_Account.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:newfyp/database_helper/database_helper.dart';
+import 'package:newfyp/home_page/explore_more/chocolate_cake.dart' as chocolate;
+import 'package:newfyp/home_page/explore_more/mutton_pasta.dart' as pasta;
 import 'package:newfyp/home_page/cuisine/chicken_tikka.dart';
 import 'package:newfyp/home_page/cuisine/haleem.dart';
 import 'package:newfyp/home_page/cuisine/paratha.dart';
@@ -22,14 +29,10 @@ import 'package:newfyp/home_page/shop_categories/pasta/pasta.dart';
 import 'package:newfyp/home_page/shop_categories/pizza/Margherita%20Pizza.dart';
 import 'package:newfyp/drawer/side_bar.dart';
 import 'package:newfyp/home_page/Explore_Offers.dart';
-
+import '../database_helper/cheken_tika.dart';
+import '../drawer/favorites.dart';
 import 'explore_more/chocolate_cake.dart';
 
-import 'package:flutter/material.dart';
-import 'package:newfyp/drawer/side_bar.dart';
-import 'package:newfyp/home_page/Explore_Offers.dart';
-import 'explore_more/chocolate_cake.dart'; // Ensure you have the correct imports for your sections
-import 'package:newfyp/home_page/shop_categories/pizza/Margherita%20Pizza.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -39,10 +42,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0; // Track the currently selected tab
+  int _selectedIndex = 0;
 
   // List of widgets that correspond to each tab
   final List<Widget> _pages = [
+    // Home page
     Scaffold(
       appBar: AppBar(
         title: Text('Home Chef Connect', style: TextStyle(color: Colors.white)),
@@ -53,46 +57,42 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       drawer: Side_Bar(),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Cuisine(),
-            SizedBox(height: 10),
-            SpecialOffersSection(),
-            SizedBox(height: 10),
-            ShopCategoriesSection(),
-            FastDeliverySection(),
-            SizedBox(height: 5),
-            DealsAndDiscountsSection(),
-            SizedBox(height: 5),
-            ExploreMore(),
-          ],
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              DiscountContainer(),
+              SizedBox(height: 10),
+              Cuisine(),
+              SizedBox(height: 10),
+              SpecialOffersSection(),
+              SizedBox(height: 10),
+              ShopCategoriesSection(),
+              FastDeliverySection(),
+              SizedBox(height: 10,),
+              ExploreMore(),
+            ],
+          ),
         ),
       ),
     ),
-    Container(color: Colors.white),
-    Container(color: Colors.white),
-    User_Account(),
+    FavoritesPage(),
+    CartPage(),
+    UserAccountPage(),
   ];
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text('Home Chef Connect', style: TextStyle(color: Colors.white)),
-      //   centerTitle: true,
-      //   backgroundColor: Color(0xff2C3E50),
-      //   iconTheme: IconThemeData(
-      //     color: Colors.white,
-      //   ),
-      // ),
       drawer: Side_Bar(),
-      body: _pages[_selectedIndex], // Dynamically display the selected page
+      body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) {
           setState(() {
-            _selectedIndex = index; // Update the selected index when the user taps a tab
+            _selectedIndex = index;
           });
         },
         items: [
@@ -102,18 +102,19 @@ class _HomePageState extends State<HomePage> {
             backgroundColor: Color(0xff2C3E50),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search, color: Colors.white),
-            label: 'Search',
-            backgroundColor: Color(0xff2C3E50),
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.favorite, color: Colors.white),
             label: 'Favorites',
             backgroundColor: Color(0xff2C3E50),
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart, color: Colors.white),
+            label: 'Cart',
+            backgroundColor: Color(0xff2C3E50),
+
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.person, color: Colors.white),
-            label: 'Profile',
+            label: 'Account',
             backgroundColor: Color(0xff2C3E50),
           ),
         ],
@@ -122,8 +123,56 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// The rest of your widget definitions, like Cuisine, SpecialOffersSection, etc., remain the same
 
+//Discount Container
+class DiscountContainer extends StatelessWidget {
+  const DiscountContainer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 200,
+      width: 500,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(11),
+        color: Color(0xff2C3E50),
+      ),
+      padding: EdgeInsets.all(16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Column containing the text
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(height: 25), // Adjust this value to control the position of the text
+              Text(
+                'Get 40% discount on',
+                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 2),
+              Text(
+                'your first order',
+                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 2),
+              Text(
+                'from app',
+                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          Image.asset(
+            'assets/images/new/aesthetic.jpeg',
+            width: 115,
+            height: 115,
+            fit: BoxFit.cover,
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 //Cuisine
 class Cuisine extends StatelessWidget {
@@ -147,9 +196,9 @@ class Cuisine extends StatelessWidget {
           child: Row(
             children: [
               GestureDetector(
-                onTap : (){
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => ChickenTikkaCard()),);
-    },
+                  onTap : (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => ChickenTikkaCard()),);
+                  },
                   child: categoryContainer('assets/images/cuisine/Chicken_tikka/Achari_Chicken_Tikka.jpeg', 'Chicken Tikka')),
 
               GestureDetector(
@@ -159,9 +208,9 @@ class Cuisine extends StatelessWidget {
                   child: categoryContainer('assets/images/cuisine/seekh_kabab/beef_seekh_kabab.jpeg', 'Seekh kabab')),
 
               GestureDetector(
-                onTap: (){
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => Haleem()),);
-                },
+                  onTap: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => Haleem()),);
+                  },
                   child: categoryContainer('assets/images/cuisine/haleem/Beef_Haleem.jpeg', 'Haleem')),
 
               GestureDetector(
@@ -198,6 +247,7 @@ class Cuisine extends StatelessWidget {
     );
   }
 }
+
 
 // SpecialOffersSection
 class SpecialOffersSection extends StatelessWidget {
@@ -337,6 +387,7 @@ class SpecialOffersSection extends StatelessWidget {
   }
 }
 
+
 //ShopCategoriesSection
 class ShopCategoriesSection extends StatelessWidget {
   const ShopCategoriesSection({super.key});
@@ -437,41 +488,82 @@ class ShopCategoriesSection extends StatelessWidget {
 }
 
 
-class FastDeliverySection extends StatelessWidget {
+//Fast Delivery Section
+class FastDeliverySection extends StatefulWidget {
   const FastDeliverySection({super.key});
 
-  final List<Map<String, String>> fastDeliveryItems = const [
+  @override
+  _FastDeliverySectionState createState() => _FastDeliverySectionState();
+}
+
+class _FastDeliverySectionState extends State<FastDeliverySection> {
+  final List<Map<String, String>> fastDeliveryItems = [
     {
       'image': 'assets/images/shop_categories/biryani/Sindhi Biryani.jpeg',
       'description': 'Homemade Beef Biryani',
-      'price': '\$12.99',
+      'price': 'Rs. 1299',
       'deliveryTime': '10-15 min delivery',
     },
     {
       'image': 'assets/images/shop_categories/pizza/Margherita Pizza.jpeg',
       'description': 'Classic Margherita Pizza',
-      'price': '\$9.99',
-      'deliveryTime': '10-15 min delivery',
-    },
-    {
-      'image': 'assets/images/shop_categories/cakes/Chocolate Truffle Cake.jpeg',
-      'description': 'Rich Chocolate Cake',
-      'price': '\$7.99',
-      'deliveryTime': '10-15 min delivery',
-    },
-    {
-      'image': 'assets/images/shop_categories/pasta/Chicken Tikka Pasta.jpeg',
-      'description': 'Spicy Chicken Tikka Pasta',
-      'price': '\$8.99',
+      'price': 'Rs. 1200',
       'deliveryTime': '10-15 min delivery',
     },
     {
       'image': 'assets/images/shop_categories/curry/karahi_Gosht.jpeg',
       'description': 'Karahi Gosht',
-      'price': '\$10.99',
+      'price': 'Rs. 999',
+      'deliveryTime': '10-15 min delivery',
+    },
+    {
+      'image': 'assets/images/shop_categories/cakes/Chocolate Truffle Cake.jpeg',
+      'description': 'Chocolate Truffle Cake',
+      'price': 'Rs. 899',
+      'deliveryTime': '10-15 min delivery',
+    },
+    {
+      'image': 'assets/images/shop_categories/pasta/Chicken Tikka Pasta.jpeg',
+      'description': 'Chicken Tikka Pasta',
+      'price': 'Rs. 799',
       'deliveryTime': '10-15 min delivery',
     },
   ];
+
+  List<Map<String, String>> favoriteItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    loadFavoriteItems();
+  }
+
+  Future<void> loadFavoriteItems() async {
+    final items = await DBHelper.getItems(); // Load favorite items from DB
+    setState(() {
+      favoriteItems = items
+          .map((item) => {
+        'imagePath': item['imagePath'] as String,
+        'title': item['title'] as String,
+        'price': item['price'] as String,
+      })
+          .toList();
+    });
+  }
+
+  void toggleFavorite(String imagePath, String title, String price, bool isFavorite) async {
+    if (isFavorite) {
+      await DBHelper.insertItem(imagePath, title, price); // Save to database
+      setState(() {
+        favoriteItems.add({'imagePath': imagePath, 'title': title, 'price': price});
+      });
+    } else {
+      await DBHelper.deleteItem(imagePath);
+      setState(() {
+        favoriteItems.removeWhere((item) => item['imagePath'] == imagePath);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -482,7 +574,14 @@ class FastDeliverySection extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Text('Fast Delivery', style: TextStyle(color: Colors.black, fontSize: 25, fontWeight: FontWeight.w900)),
+            child: Text(
+              'Fast Delivery',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 25,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
           ),
         ),
         SizedBox(height: 1),
@@ -490,8 +589,12 @@ class FastDeliverySection extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: fastDeliveryItems.map((item) {
+              bool isFavorite = favoriteItems
+                  .any((favItem) => favItem['imagePath'] == item['image']);
+
               return GestureDetector(
                 onTap: () {
+                  // Handle navigation for each item (customize as needed)
                   if (item['description'] == 'Homemade Beef Biryani') {
                     Navigator.push(
                       context,
@@ -502,24 +605,24 @@ class FastDeliverySection extends StatelessWidget {
                       context,
                       MaterialPageRoute(builder: (context) => ClassicMargheritaPizza()),
                     );
-                  } else if (item['description'] == 'Rich Chocolate Cake') {
+                  } else if (item['description'] == 'Karahi Gosht') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => KarahiGosht()),
+                    );
+                  } else if (item['description'] == 'Chocolate Truffle Cake') {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => RichChocolateCake()),
                     );
-                  } else if (item['description'] == 'Spicy Chicken Tikka Pasta') {
+                  } else if (item['description'] == 'Chicken Tikka Pasta') {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => SpicyChickenTikkaPasta()),
                     );
-                  } else if (item['description'] == 'Karahi Gosht') {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => KarahiGosht()),
-                    );
                   }
                 },
-                child: fastDeliveryContainer(item),
+                child: fastDeliveryContainer(item, isFavorite),
               );
             }).toList(),
           ),
@@ -528,7 +631,7 @@ class FastDeliverySection extends StatelessWidget {
     );
   }
 
-  Widget fastDeliveryContainer(Map<String, String> item) {
+  Widget fastDeliveryContainer(Map<String, String> item, bool isFavorite) {
     return Container(
       width: 370,
       height: 270,
@@ -556,7 +659,7 @@ class FastDeliverySection extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
                   image: DecorationImage(
-                    image: AssetImage(item['image']!),
+                    image: AssetImage(item['image'] ?? ''),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -567,23 +670,29 @@ class FastDeliverySection extends StatelessWidget {
                 right: 8,
                 child: GestureDetector(
                   onTap: () {
-                    // Handle favorite toggle here
+                    setState(() {
+                      isFavorite = !isFavorite;
+                      toggleFavorite(
+                        item['image'] ?? '',
+                        item['description'] ?? '',
+                        item['price'] ?? '',
+                        isFavorite,
+                      );
+                    });
                   },
                   child: Icon(
-                    Icons.favorite_border,
-                    color: Colors.white,
-                    size: 30,
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorite ? Colors.yellow : Colors.white,
+                    size: 25,
                   ),
                 ),
               ),
-              // Button in the top-left corner
+              // Button in the top-left corner (optional)
               Positioned(
                 top: 8,
                 left: 8,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Handle button action here
-                  },
+                  onPressed: () {},
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xff2C3E50),
                     shape: RoundedRectangleBorder(
@@ -612,7 +721,7 @@ class FastDeliverySection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item['description']!,
+                  item['description'] ?? '',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -623,7 +732,7 @@ class FastDeliverySection extends StatelessWidget {
                 ),
                 SizedBox(height: 5),
                 Text(
-                  item['price']!,
+                  item['price'] ?? '',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[700],
@@ -631,7 +740,7 @@ class FastDeliverySection extends StatelessWidget {
                 ),
                 SizedBox(height: 5),
                 Text(
-                  item['deliveryTime']!,
+                  item['deliveryTime'] ?? '',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.green[700],
@@ -646,90 +755,10 @@ class FastDeliverySection extends StatelessWidget {
   }
 }
 
-//DealsAndDiscountsSection
-class DealsAndDiscountsSection extends StatelessWidget {
-  const DealsAndDiscountsSection({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            'Deals & Discounts',
-            style: TextStyle(color: Colors.black, fontSize: 25, fontWeight: FontWeight.w900),
-          ),
-        ),
-        SizedBox(height: 2),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              dealContainer('assets/images/shop_categories/curry/paneer_butter_masala.jpeg'),
-              dealContainer('assets/images/shop_categories/curry/butter_chicken.jpeg'),
-              dealContainer('assets/images/shop_categories/curry/chiken_Tikka_masala.jpeg'),
-              dealContainer('assets/images/shop_categories/curry/mutton_karahi.jpeg'),
-              dealContainer('assets/images/shop_categories/curry/karahi_Gosht.jpeg'),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 
-  Widget dealContainer(String imagePath) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Container(
-        width: 150,
-        height: 150,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
-              blurRadius: 5,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                imagePath,
-                width: 150,
-                height: 150,
-                fit: BoxFit.cover,
-              ),
-            ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: GestureDetector(
-                onTap: () {
-                  // Handle favorite toggle here
-                },
-                child: Icon(
-                  Icons.favorite_border,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-}
 
 //ExploreMore
-
 class ExploreMore extends StatelessWidget {
   const ExploreMore({super.key});
 
@@ -737,38 +766,39 @@ class ExploreMore extends StatelessWidget {
     {
       'image': 'assets/images/shop_categories/pizza/chicken_tikka_pizza.jpeg',
       'description': 'Chicken Tikka Pizza',
-      'price': '\$12.99',
+      'price': 'Rs. 999',
       'deliveryTime': '10-15 min delivery',
       'page': 'ChickenTikkaPizza',
     },
     {
       'image': 'assets/images/shop_categories/cakes/Classic(One Bowl) Chocolate Cake.jpeg',
       'description': 'Classic(One Bowl) Chocolate Cake',
-      'price': '\$9.99',
+      'price': 'Rs. 1299',
       'deliveryTime': '10-15 min delivery',
       'page': 'ChocolateCake',
     },
     {
       'image': 'assets/images/shop_categories/pasta/Mutton Pasta.jpeg',
       'description': 'Mutton Pasta',
-      'price': '\$11.99',
+      'price': 'Rs. 1299',
       'deliveryTime': '10-15 min delivery',
       'page': 'MuttonPasta',
     },
     {
       'image': 'assets/images/shop_categories/brownies/Fudgy Brownies.jpeg',
       'description': 'Fudgy Brownie',
-      'price': '\$7.99',
+      'price': 'Rs. 799',
       'deliveryTime': '10-15 min delivery',
       'page': 'FudgyBrownie',
     },
     {
       'image': 'assets/images/shop_categories/curry/paneer_butter_masala.jpeg',
-      'description': 'Paneer butter masala',
-      'price': '\$11.99',
+      'description': 'Paneer Butter Masala',
+      'price': 'Rs. 1299',
       'deliveryTime': '10-15 min delivery',
       'page': 'PaneerButterMasala',
     },
+
   ];
 
   @override
@@ -799,7 +829,6 @@ class ExploreMore extends StatelessWidget {
   Widget exploremoreContainer(BuildContext context, Map<String, String> item) {
     return GestureDetector(
       onTap: () {
-        // Navigate to the respective page based on the 'page' key in the item map
         String page = item['page'] ?? '';
 
         if (page == 'ChickenTikkaPizza') {
@@ -810,7 +839,7 @@ class ExploreMore extends StatelessWidget {
         } else if (page == 'ChocolateCake') {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => ChocolateCake()),
+            MaterialPageRoute(builder: (context) => chocolate.ChocolateCake()),
           );
         } else if (page == 'MuttonPasta') {
           Navigator.push(
@@ -861,21 +890,6 @@ class ExploreMore extends StatelessWidget {
                     image: DecorationImage(
                       image: AssetImage(item['image']!),
                       fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                // Favorite icon in the top-right corner
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: GestureDetector(
-                    onTap: () {
-                      // Handle favorite toggle here
-                    },
-                    child: Icon(
-                      Icons.favorite_border,
-                      color: Colors.white,
-                      size: 30,
                     ),
                   ),
                 ),

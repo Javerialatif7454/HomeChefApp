@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../database_helper/add_to_cart.dart';
+import '../../model/addtocart.dart'; //
+import '../../database_helper/cheken_tika.dart';
 
 class SeekhKabab extends StatefulWidget {
   @override
@@ -8,62 +11,72 @@ class SeekhKabab extends StatefulWidget {
 class _SeekhKababCardState extends State<SeekhKabab> {
   List<Map<String, String>> favoriteItems = [];
 
-  void toggleFavorite(String imagePath, String title, String price, bool isFavorite) {
+  @override
+  void initState() {
+    super.initState();
+    loadFavoriteItems();
+  }
+
+  Future<void> loadFavoriteItems() async {
+    final items = await DBHelper.getItems();
+    setState(() {
+      favoriteItems = items
+          .map((item) => {
+        'imagePath': item['imagePath'] as String,
+        'title': item['title'] as String,
+        'price': item['price'] as String,
+      })
+          .toList();
+    });
+  }
+
+  void toggleFavorite(String imagePath, String title, String price, bool isFavorite) async {
+    if (isFavorite) {
+      await DBHelper.insertItem(imagePath, title, price);
+    } else {
+      await DBHelper.deleteItem(imagePath);
+    }
+
     setState(() {
       if (isFavorite) {
-        favoriteItems.add({
-          'imagePath': imagePath,
-          'title': title,
-          'price': price,
-        });
+        favoriteItems.add({'imagePath': imagePath, 'title': title, 'price': price});
       } else {
         favoriteItems.removeWhere((item) => item['imagePath'] == imagePath);
       }
     });
   }
 
-  // List of Seekh Kabab items with their details
-  final List<Map<String, String>> seekhKababItems = [
-    {
-      'image': 'assets/images/cuisine/seekh_kabab/beef_seekh_kabab.jpeg',
-      'description': 'Beef Seekh Kabab',
-      'price': '\$11.99',
-      'deliveryTime': '10-15 min delivery',
-    },
-    {
-      'image': 'assets/images/cuisine/seekh_kabab/Chicken_Seekh_Kebab.jpeg',
-      'description': 'Chicken Seekh Kabab',
-      'price': '\$10.99',
-      'deliveryTime': '10-15 min delivery',
-    },
-    {
-      'image': 'assets/images/cuisine/seekh_kabab/Mutton_Seekh_Kebab.jpeg',
-      'description': 'Mutton Seekh Kabab',
-      'price': '\$13.99',
-      'deliveryTime': '10-15 min delivery',
-    },
-    {
-      'image': 'assets/images/cuisine/seekh_kabab/Shami_Seekh_Kebab.jpeg',
-      'description': 'Shami Seekh Kabab',
-      'price': '\$12.99',
-      'deliveryTime': '10-15 min delivery',
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final List<Map<String, String>> seekhKababItems = [
+      {
+        'image': 'assets/images/cuisine/seekh_kabab/beef_seekh_kabab.jpeg',
+        'description': 'Beef Seekh Kabab',
+        'price': 'Rs. 899',
+        'deliveryTime': '10-15 min delivery',
+      },
+      {
+        'image': 'assets/images/cuisine/seekh_kabab/Chicken_Seekh_Kebab.jpeg',
+        'description': 'Chicken Seekh Kabab',
+        'price': 'Rs. 799',
+        'deliveryTime': '10-15 min delivery',
+      },
+      {
+        'image': 'assets/images/cuisine/seekh_kabab/Mutton_Seekh_Kebab.jpeg',
+        'description': 'Mutton Seekh Kabab',
+        'price': 'Rs. 999',
+        'deliveryTime': '10-15 min delivery',
+      },
+      {
+        'image': 'assets/images/cuisine/seekh_kabab/Shami_Seekh_Kebab.jpeg',
+        'description': 'Shami Seekh Kabab',
+        'price': 'Rs. 950',
+        'deliveryTime': '10-15 min delivery',
+      },
+    ];
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Seekh Kabab', style: TextStyle(fontWeight: FontWeight.bold),),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.favorite),
-            onPressed: () {
-              // Add your favorite page navigation here
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text('Seekh Kabab')),
       body: SingleChildScrollView(
         child: Column(
           children: seekhKababItems.map((item) {
@@ -104,29 +117,68 @@ class _SeekhKababCardItemState extends State<SeekhKababCardItem> {
   bool isFavorite = false;
 
   @override
+  void initState() {
+    super.initState();
+    loadFavoriteState();
+  }
+
+  Future<void> loadFavoriteState() async {
+    final favorite = await DBHelper.isFavorite(widget.imagePath);
+    setState(() {
+      isFavorite = favorite;
+    });
+  }
+
+  void addToCart() async {
+    CartItem newItem = CartItem(
+      imagePath: widget.imagePath,
+      title: widget.title,
+      price: widget.price,
+      quantity: 1,
+    );
+    await DbHelper.insertCartItem(newItem);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${widget.title} added to cart!')),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
       height: 270,
       child: Card(
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         child: Column(
           children: [
             Stack(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(15),
-                    topRight: Radius.circular(15),
-                  ),
-                  child: Image.asset(
-                    widget.imagePath,
-                    width: 450,
-                    height: 180,
-                    fit: BoxFit.cover,
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SeekhKababDialog(
+                          imagePath: widget.imagePath,
+                          title: widget.title,
+                          price: widget.price,
+                        ),
+                      ),
+                    );
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(15),
+                      topRight: Radius.circular(15),
+                    ),
+                    child: Image.asset(
+                      widget.imagePath,
+                      width: 450,
+                      height: 180,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
                 Positioned(
@@ -158,16 +210,12 @@ class _SeekhKababCardItemState extends State<SeekhKababCardItem> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Left side text: Title, Price, and Delivery Time
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         widget.title,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                        ),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
                       ),
                       SizedBox(height: 5),
                       Text(
@@ -177,19 +225,21 @@ class _SeekhKababCardItemState extends State<SeekhKababCardItem> {
                       SizedBox(height: 5),
                       Text(
                         widget.deliveryTime,
-                        style: TextStyle(color: Colors.green[700], fontSize: 12, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          color: Colors.green[700],
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ),
-                  // Right side: Add to Cart button
                   ElevatedButton(
-                    onPressed: () {},
-                    child: Text('Add to Cart', style: TextStyle(color: Colors.white),),
+                    onPressed: addToCart,
+                    child: Text('Add to Cart', style: TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: 42, vertical: 15),
                       backgroundColor: Color(0xff2C3E50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
                   ),
                 ],
@@ -201,3 +251,71 @@ class _SeekhKababCardItemState extends State<SeekhKababCardItem> {
     );
   }
 }
+
+class SeekhKababDialog extends StatelessWidget {
+  final String imagePath;
+  final String title;
+  final String price;
+
+  SeekhKababDialog({
+    required this.imagePath,
+    required this.title,
+    required this.price,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    String description = '';
+    if (title == 'Beef Seekh Kabab') {
+      description = 'Juicy and flavorful beef seekh kababs made with minced beef, spices, and herbs. Served with naan or rice for a complete meal.';
+    } else if (title == 'Chicken Seekh Kabab') {
+      description = 'Tender chicken seekh kababs seasoned with aromatic spices, grilled to perfection. A perfect combination with chutney or naan.';
+    } else if (title == 'Mutton Seekh Kabab') {
+      description = 'Rich and juicy mutton seekh kababs, marinated with traditional spices. Grilled to perfection for a smoky, mouthwatering flavor.';
+    } else if (title == 'Shami Seekh Kabab') {
+      description = 'Delicious Shami seekh kababs made with minced meat, spices, and lentils. Cooked to perfection and served hot for a satisfying meal.';
+    }
+
+
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(child: Image.asset(imagePath)),
+            SizedBox(height: 20),
+            Text(
+              title,
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text(
+              price,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+            ),
+            SizedBox(height: 20),
+            Text(description, style: TextStyle(fontSize: 16, color: Colors.black)),
+            SizedBox(height: 20),
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                },
+                child: Text('Place Order', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 40),
+                  backgroundColor: Color(0xff2C3E50),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+

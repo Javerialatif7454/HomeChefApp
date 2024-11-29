@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../database_helper/add_to_cart.dart';
+import '../model/addtocart.dart';
+
 class ExploreOffers extends StatelessWidget {
   const ExploreOffers({super.key});
 
@@ -7,9 +10,15 @@ class ExploreOffers extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Explore Offers', style: TextStyle(fontWeight: FontWeight.w900),),
+        title: Text('Explore Offers', style: TextStyle(fontWeight: FontWeight.w900,color: Colors.white),),
         centerTitle: true,
-        backgroundColor: Colors.pink,
+        backgroundColor: Color(0xff2C3E50),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -36,23 +45,118 @@ class ExploreOffers extends StatelessWidget {
   }
 }
 
+
 class Explore extends StatelessWidget {
   const Explore({super.key});
+
+  void _showProductDialog(BuildContext context, String name, String price, String imagePath) {
+    showDialog(
+      context: context,
+      barrierDismissible: true, // Allow tapping outside the dialog to close it
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Container(
+            padding: EdgeInsets.all(16),
+            height: 315, // Adjust the height of the dialog as needed
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Align(
+                  alignment: Alignment.topRight,
+                  child: IconButton(
+                    icon: Icon(Icons.close),
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Close the dialog when clicked
+                    },
+                  ),
+                ),
+                Image.asset(
+                  imagePath,
+                  fit: BoxFit.cover,
+                  height: 100, // Adjust the image size
+                ),
+                SizedBox(height: 10),
+                Text(
+                  name,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  price,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Color(0xff2C3E50),
+                  ),
+                ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    // Handle the order now action
+                  },
+                  child: Text(
+                    'Order Now',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xff2C3E50),
+                    minimumSize: Size(150, 45), // Adjust the button size
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void addToCart() async {
+    // Assuming quantity is 1 for now. You can modify it to increase based on user input.
+    CartItem newItem = CartItem(
+      imagePath: 'assets/images/shop_categories/cakes/pink_velvet.jpeg', // Update to actual image path
+      title: 'Pink Velvet Cake', // Update to actual title
+      price: 'Rs.1500', // Update to actual price
+      quantity: 1, // Default quantity is 1
+    );
+    await DbHelper.insertCartItem(newItem);
+
+    // Show a snack bar to notify the user
+    // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    //   content: Text('Pink Velvet Cake added to cart!'),
+    // ));
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            width: double.infinity,
-            height: 360,
-            color: Colors.brown,
-            child: Image.asset(
+        GestureDetector(
+          onTap: () {
+            _showProductDialog(
+              context,
+              'Pink Velvet Cake',
+              'Rs.1500',
               'assets/images/shop_categories/cakes/pink_velvet.jpeg',
-              fit: BoxFit.cover,
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              width: double.infinity,
+              height: 360,
+              color: Colors.brown,
+              child: Image.asset(
+                'assets/images/shop_categories/cakes/pink_velvet.jpeg',
+                fit: BoxFit.cover,
+              ),
             ),
           ),
         ),
@@ -60,87 +164,83 @@ class Explore extends StatelessWidget {
           padding: const EdgeInsets.all(8.0),
           child: Text(
             'Pink Velvet Cake',
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 25),
+            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 25),
           ),
         ),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
-              Text(
+              const Text(
                 'Rs.1500',
-                style: TextStyle(color: Colors.pink, fontSize: 20, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: Color(0xff2C3E50),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              SizedBox(width: 5),
-              Text(
+              const SizedBox(width: 8),
+              const Text(
                 'Rs. 2000',
-                style: TextStyle(color: Colors.grey, fontSize: 19, fontWeight: FontWeight.w400),
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w400,
+                  decoration: TextDecoration.lineThrough,
+                ),
               ),
-              SizedBox(width: 5),
+              const SizedBox(width: 8),
               SizedBox(
                 height: 30,
                 width: 90,
                 child: ElevatedButton(
                   onPressed: () {},
-                  child: Center(
+                  child: const Center(
                     child: Text(
                       '15% off',
-                      style: TextStyle(color: Colors.pink, fontWeight: FontWeight.w700, fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pink.shade100,
+                    backgroundColor: const Color(0xff2C3E50),
                   ),
                 ),
               ),
             ],
           ),
         ),
-        SizedBox(height: 6),
-        Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: SizedBox(
-                height: 50,
-                width: 270,
-                child: ElevatedButton(
-                  onPressed: () {},
-                  child: Text(
-                    'Add to Cart',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pink,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
+        const SizedBox(height: 6),
+        Center(
+          child: SizedBox(
+            height: 50,
+            width: 190,
+            child: ElevatedButton(
+              onPressed: addToCart,
+              child: const Text(
+                'Add to Cart',
+                style: TextStyle(color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xff2C3E50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(left: 11),
-              child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.grey, width: 1),
-                ),
-                child: IconButton(
-                  onPressed: () {
-                    // Add to favorites functionality here
-                  },
-                  icon: Icon(Icons.favorite),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
       ],
     );
   }
+
 }
+
+
 
 
 class ProductGrid extends StatelessWidget {
@@ -201,6 +301,7 @@ class ProductGrid extends StatelessWidget {
     },
   ];
 
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -217,63 +318,143 @@ class ProductGrid extends StatelessWidget {
         itemCount: products.length,
         itemBuilder: (context, index) {
           final product = products[index];
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
-                  spreadRadius: 2,
-                  blurRadius: 4,
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(
-                      product['image']!,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
+          return GestureDetector(
+            onTap: () => _showProductDialog(context, product),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.2),
+                    spreadRadius: 2,
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.asset(
+                        product['image']!,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(height: 8.0),
-                Text(
-                  product['name']!,
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 14,
+                  SizedBox(height: 8.0),
+                  Text(
+                    product['name']!,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 4.0),
-                Text(
-                  product['price']!,
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                  SizedBox(height: 4.0),
+                  Text(
+                    product['price']!,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
-                ),
-                Text(
-                  product['previousPrice']!,
-                  style: TextStyle(
-                    color: Colors.grey,
-                    decoration: TextDecoration.lineThrough,
-                    fontSize: 14,
+                  Text(
+                    product['previousPrice']!,
+                    style: TextStyle(
+                      color: Colors.grey,
+                      decoration: TextDecoration.lineThrough,
+                      fontSize: 14,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
       ),
+    );
+  }
+
+  void _showProductDialog(BuildContext context, Map<String, String> product) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Stack(
+            clipBehavior: Clip.none, // This allows the close button to be placed outside the dialog
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.asset(
+                        product['image']!,
+                        width: 200,
+                        height: 200,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      product['name']!,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                        color: Colors.black,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      product['price']!,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 20,
+                        color: Colors.green,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Add your order logic here
+                        Navigator.of(context).pop(); // Close the dialog
+                      },
+                      child: Text('Order Now', style: TextStyle(color: Colors.white),),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xff2C3E50),
+                        padding: EdgeInsets.symmetric(horizontal: 50, vertical: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: -10,
+                right: -10,
+                child: IconButton(
+                  icon: Icon(Icons.close, color: Colors.black),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

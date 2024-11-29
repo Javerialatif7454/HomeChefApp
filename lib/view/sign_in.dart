@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:newfyp/SignInUp_Screen/sign_up.dart';
 import 'package:newfyp/home_page/home2.dart';
+import 'package:newfyp/view/sign_up.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../database_helper/database_helper.dart';
+import '../database_helper/signinup.dart';
 
 class Signin_Screen extends StatefulWidget {
   @override
@@ -19,7 +20,7 @@ class _Signin_ScreenState extends State<Signin_Screen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      Map<String, dynamic>? user = await databaseHelper.getUser(email!);
+      Map<String, dynamic>? user = await DBHelper.getUserData();
       if (user != null && user['password'] == password) {
         // Save login state in shared preferences
         SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -64,7 +65,6 @@ class _Signin_ScreenState extends State<Signin_Screen> {
                           color: Colors.grey,
                           width: 2,
                         )
-
                     )
                 ),
                 validator: (value) => value!.isEmpty ? 'Enter your email' : null,

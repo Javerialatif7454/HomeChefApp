@@ -1,14 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:newfyp/home_page/bottom_navigation_bar/add_to_cart.dart';
+import '../../database_helper/add_to_cart.dart';
+import '../../database_helper/cheken_tika.dart';
+import '../../model/addtocart.dart';
 
 class Paratha extends StatefulWidget {
   @override
-  State<Paratha> createState() => _ParathaCardState();
+  State<Paratha> createState() => _ParathaState();
 }
 
-class _ParathaCardState extends State<Paratha> {
+class _ParathaState extends State<Paratha> {
   List<Map<String, String>> favoriteItems = [];
 
-  void toggleFavorite(String imagePath, String title, String price, bool isFavorite) {
+  @override
+  void initState() {
+    super.initState();
+    loadFavoriteItems();
+  }
+
+  Future<void> loadFavoriteItems() async {
+    final items = await DBHelper.getItems();
+    setState(() {
+      favoriteItems = items
+          .map((item) => {
+        'imagePath': item['imagePath'] as String,
+        'title': item['title'] as String,
+        'price': item['price'] as String,
+      })
+          .toList();
+    });
+  }
+
+  void toggleFavorite(String imagePath, String title, String price, bool isFavorite) async {
+    if (isFavorite) {
+      await DBHelper.insertItem(imagePath, title, price);
+    } else {
+      await DBHelper.deleteItem(imagePath);
+    }
+
     setState(() {
       if (isFavorite) {
         favoriteItems.add({
@@ -22,56 +51,42 @@ class _ParathaCardState extends State<Paratha> {
     });
   }
 
-  // List of Paratha items with their details
-  final List<Map<String, String>> parathaItems = [
-    {
-      'image': 'assets/images/cuisine/paratha/Keema_Paratha.jpeg',
-      'description': 'Keema Paratha',
-      'price': '\$8.99',
-      'deliveryTime': '10-15 min delivery',
-    },
-    {
-      'image': 'assets/images/cuisine/paratha/Aloo_Paratha.jpeg',
-      'description': 'Aloo Paratha',
-      'price': '\$6.99',
-      'deliveryTime': '10-15 min delivery',
-    },
-    {
-      'image': 'assets/images/cuisine/paratha/Methi_Paratha.jpeg',
-      'description': 'Methi Paratha',
-      'price': '\$7.99',
-      'deliveryTime': '10-15 min delivery',
-    },
-    {
-      'image': 'assets/images/cuisine/paratha/Gobi_Paratha.jpeg',
-      'description': 'Gobi Paratha',
-      'price': '\$9.99',
-      'deliveryTime': '10-15 min delivery',
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final List<Map<String, String>> parathaItems = [
+      {
+        'image': 'assets/images/cuisine/paratha/Keema_Paratha.jpeg',
+        'title': 'Keema Paratha',
+        'price': 'Rs. 699',
+      },
+      {
+        'image': 'assets/images/cuisine/paratha/Aloo_Paratha.jpeg',
+        'title': 'Aloo Paratha',
+        'price': 'Rs. 499',
+      },
+      {
+        'image': 'assets/images/cuisine/paratha/Methi_Paratha.jpeg',
+        'title': 'Methi Paratha',
+        'price': 'Rs. 599',
+      },
+      {
+        'image': 'assets/images/cuisine/paratha/Gobi_Paratha.jpeg',
+        'title': 'Gobi Paratha',
+        'price': 'Rs. 799',
+      },
+    ];
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Paratha', style: TextStyle(fontWeight: FontWeight.bold),),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.favorite),
-            onPressed: () {
-              // Add your favorite page navigation here
-            },
-          ),
-        ],
+        title: Text('Paratha'),
       ),
       body: SingleChildScrollView(
         child: Column(
           children: parathaItems.map((item) {
             return ParathaCardItem(
               imagePath: item['image']!,
-              title: item['description']!,
+              title: item['title']!,
               price: item['price']!,
-              deliveryTime: item['deliveryTime']!,
               toggleFavorite: toggleFavorite,
             );
           }).toList(),
@@ -85,14 +100,12 @@ class ParathaCardItem extends StatefulWidget {
   final String imagePath;
   final String title;
   final String price;
-  final String deliveryTime;
   final Function(String, String, String, bool) toggleFavorite;
 
   ParathaCardItem({
     required this.imagePath,
     required this.title,
     required this.price,
-    required this.deliveryTime,
     required this.toggleFavorite,
   });
 
@@ -102,6 +115,33 @@ class ParathaCardItem extends StatefulWidget {
 
 class _ParathaCardItemState extends State<ParathaCardItem> {
   bool isFavorite = false;
+
+  @override
+  void initState() {
+    super.initState();
+    loadFavoriteState();
+  }
+
+  Future<void> loadFavoriteState() async {
+    final favorite = await DBHelper.isFavorite(widget.imagePath);
+    setState(() {
+      isFavorite = favorite;
+    });
+  }
+
+  void addToCart() async {
+    CartItem newItem = CartItem(
+      imagePath: widget.imagePath,
+      title: widget.title,
+      price: widget.price,
+      quantity: 1,
+    );
+    await DbHelper.insertCartItem(newItem);
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('${widget.title} added to cart!'),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -117,16 +157,30 @@ class _ParathaCardItemState extends State<ParathaCardItem> {
           children: [
             Stack(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(15),
-                    topRight: Radius.circular(15),
-                  ),
-                  child: Image.asset(
-                    widget.imagePath,
-                    width: 450,
-                    height: 180,
-                    fit: BoxFit.cover,
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ParathaDialog(
+                          imagePath: widget.imagePath,
+                          title: widget.title,
+                          price: widget.price,
+                        ),
+                      ),
+                    );
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(15),
+                      topRight: Radius.circular(15),
+                    ),
+                    child: Image.asset(
+                      widget.imagePath,
+                      width: 450,
+                      height: 180,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
                 Positioned(
@@ -158,7 +212,6 @@ class _ParathaCardItemState extends State<ParathaCardItem> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Left side text: Title, Price, and Delivery Time
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -172,20 +225,27 @@ class _ParathaCardItemState extends State<ParathaCardItem> {
                       SizedBox(height: 5),
                       Text(
                         widget.price,
-                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       SizedBox(height: 5),
                       Text(
-                        widget.deliveryTime,
-                        style: TextStyle(color: Colors.green[700], fontSize: 12, fontWeight: FontWeight.w500),
+                        '10-15 min delivery',
+                        style: TextStyle(
+                          color: Colors.green[700],
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ),
-                  // Right side: Add to Cart button
                   ElevatedButton(
-                    onPressed: () {},
-                    child: Text('Add to Cart', style: TextStyle(color: Colors.white),),
+                    onPressed: addToCart,
+                    child: Text('Add to Cart', style: TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: 42, vertical: 15),
                       backgroundColor: Color(0xff2C3E50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -193,6 +253,69 @@ class _ParathaCardItemState extends State<ParathaCardItem> {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ParathaDialog extends StatelessWidget {
+  final String imagePath;
+  final String title;
+  final String price;
+
+  ParathaDialog({
+    required this.imagePath,
+    required this.title,
+    required this.price,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    String description = '';
+    if (title == 'Keema Paratha') {
+      description = 'A rich paratha stuffed with seasoned minced meat. A savory delight that’s crispy and flavorful.';
+    } else if (title == 'Aloo Paratha') {
+      description = 'A classic Indian paratha with spiced mashed potatoes. Perfectly soft and packed with traditional flavors.';
+    } else if (title == 'Methi Paratha') {
+      description = 'A healthy paratha made with fenugreek leaves. Lightly spiced for a delicious, earthy flavor.';
+    } else if (title == 'Gobi Paratha') {
+      description = 'A flavorful paratha filled with spiced cauliflower. A tasty and nutritious treat for all ages.';
+    }
+
+
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Image.asset(imagePath),
+            SizedBox(height: 20),
+            Text(
+              title,
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text(price, style: TextStyle(fontSize: 18)),
+            SizedBox(height: 20),
+            Text(description, style: TextStyle(fontSize: 16)),
+            SizedBox(height: 20),
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                },
+                child: Text('Place Order', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 40),
+                  backgroundColor: Color(0xff2C3E50),
+                ),
               ),
             ),
           ],

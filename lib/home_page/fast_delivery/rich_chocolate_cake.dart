@@ -1,7 +1,82 @@
 import 'package:flutter/material.dart';
+import '../../database_helper/add_to_cart.dart'; // Import your cart helper
+import '../../model/addtocart.dart'; // Import your cart model
 
 class RichChocolateCake extends StatelessWidget {
   const RichChocolateCake({super.key});
+
+  void _showProductDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Rich Chocolate Cake', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/shop_categories/cakes/Chocolate Truffle Cake.jpeg',
+                    width: 150,
+                    height: 150,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Rs. 899',
+                style: TextStyle(fontSize: 18, color: Colors.green[700]),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'A rich and decadent chocolate cake with layers of chocolate ganache, perfect for any celebration.',
+                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+              ),
+              SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerRight,
+                child: ElevatedButton(
+                  onPressed: () {
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                    backgroundColor: Color(0xff2C3E50), // Button color
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    'Add to Cart',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Function to add the item to the cart
+  void addToCart(BuildContext context) async {
+    CartItem newItem = CartItem(
+      imagePath: 'assets/images/shop_categories/cakes/Chocolate Truffle Cake.jpeg', // Image path
+      title: 'Rich Chocolate Cake', // Product title
+      price: '899', // Product price
+      quantity: 1, // Quantity can be dynamic
+    );
+
+    await DbHelper.insertCartItem(newItem);
+
+    // Show a snackbar to notify the user
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Rich Chocolate Cake added to cart!'),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,27 +105,29 @@ class RichChocolateCake extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               // First container with image
-              Container(
-                width: 350, // Set the width of the container
-                height: 450, // Set the height of the container
-                decoration: BoxDecoration(
-                  color: Colors.white, // Set background color to white
-                  borderRadius: BorderRadius.circular(10), // Optional: rounded corners
-                ),
-                child: Center(
-                  child: ClipOval(
-                    child: Image.asset(
-                      'assets/images/shop_categories/cakes/Chocolate Truffle Cake.jpeg', // Your image path
-                      width: 300, // Set the width of the image (can adjust as needed)
-                      height: 270, // Set the height of the image (must be the same as width for perfect circle)
-                      fit: BoxFit.cover, // Ensures the image covers the circular area without distortion
+              GestureDetector(
+                onTap: () => _showProductDialog(context), // Show dialog when the image is tapped
+                child: Container(
+                  width: 350,
+                  height: 450,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/images/shop_categories/cakes/Chocolate Truffle Cake.jpeg',
+                        width: 300,
+                        height: 270,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: 16), // Spacing between image and description container
-          
-              // Description container
+              SizedBox(height: 16),
+
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -68,30 +145,28 @@ class RichChocolateCake extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Description heading
                     Text(
-                      'Description', // Heading for the description
+                      'Description',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
                     ),
-                    SizedBox(height: 8), // Spacing between heading and text
-                    // Description text
+                    SizedBox(height: 8),
                     Text(
-                      'This Chocolate Truffle Cake is crafted with layers of rich chocolate sponge and smooth ganache, delivering a luxurious, melt-in-your-mouth experience.',
+                      'A rich and decadent chocolate cake with layers of chocolate ganache, perfect for any celebration.',
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.grey[800],
                       ),
-                      textAlign: TextAlign.justify, // Text alignment for better readability
+                      textAlign: TextAlign.justify,
                     ),
                   ],
                 ),
               ),
               SizedBox(height: 16), // Spacing between description and "Add to Cart" container
-          
+
               // Second container with text and add to cart button
               Container(
                 width: double.infinity,
@@ -111,38 +186,35 @@ class RichChocolateCake extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Chocolate Truffle Cake', // Product name
+                      'Rich Chocolate Cake',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
                     ),
-                    SizedBox(height: 8), // Spacing between name and price
+                    SizedBox(height: 8),
                     Text(
-                      '\$18.99', // Product price (Updated for Rich Chocolate Cake)
+                      'Rs. 899',
                       style: TextStyle(
                         fontSize: 18,
                         color: Colors.green[700],
                       ),
                     ),
-                    SizedBox(height: 16), // Spacing between price and button
+                    SizedBox(height: 16),
                     Align(
                       alignment: Alignment.centerRight,
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Add to cart logic here
-                        },
+                        onPressed: () => addToCart(context),
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
                           backgroundColor: Color(0xff2C3E50),
-                          // Button color
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                         child: Text(
-                          'Add to Cart',
+                          'Place Order',
                           style: TextStyle(color: Colors.white),
                         ),
                       ),

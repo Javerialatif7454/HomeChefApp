@@ -2,54 +2,62 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DatabaseHelper {
-  static final _databaseName = "UserDatabase.db";
-  static final _databaseVersion = 1;
+  static const _databaseName = 'favorites.db';
+  static const _databaseVersion = 1;
 
-  static final table = 'users';
+  static const table = 'favorites';
+  static const columnId = 'id';
+  static const columnDescription = 'description';
 
-  static final columnId = '_id';
-  static final columnName = 'name';
-  static final columnEmail = 'email';
-  static final columnPassword = 'password';
-
-  DatabaseHelper._privateConstructor();
+  // Singleton instance
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
 
+  // Singleton database
   static Database? _database;
 
+  DatabaseHelper._privateConstructor();
+
+  // Open the database
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
     return _database!;
   }
 
-  _initDatabase() async {
+  Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), _databaseName);
     return await openDatabase(path, version: _databaseVersion, onCreate: _onCreate);
   }
 
+  // Create the database table
   Future _onCreate(Database db, int version) async {
     await db.execute('''
-          CREATE TABLE $table (
-            $columnId INTEGER PRIMARY KEY,
-            $columnName TEXT NOT NULL,
-            $columnEmail TEXT NOT NULL UNIQUE,
-            $columnPassword TEXT NOT NULL
-          )
-          ''');
+      CREATE TABLE $table (
+        $columnId INTEGER PRIMARY KEY,
+        $columnDescription TEXT NOT NULL
+      )
+    ''');
   }
 
-  Future<int> insert(Map<String, dynamic> row) async {
-    Database db = await instance.database;
-    return await db.insert(table, row);
+  // Insert a favorite item
+  Future<int> insertFavorite(Map<String, String> item) async {
+    Database db = await database;
+    return await db.insert(table, item);
   }
 
-  Future<Map<String, dynamic>?> getUser(String email) async {
-    Database db = await instance.database;
-    List<Map<String, dynamic>> results = await db.query(table, where: "$columnEmail = ?", whereArgs: [email]);
-    if (results.isNotEmpty) {
-      return results.first;
-    }
-    return null;
+  // Remove a favorite item
+  Future<int> removeFavorite(String description) async {
+    Database db = await database;
+    return await db.delete(
+      table,
+      where: '$columnDescription = ?',
+      whereArgs: [description],
+    );
+  }
+
+  // Get all favorite items
+  Future<List<Map<String, dynamic>>> getFavorites() async {
+    Database db = await database;
+    return await db.query(table);
   }
 }

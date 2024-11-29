@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../database_helper/add_to_cart.dart';
+import '../../database_helper/cheken_tika.dart';
+import '../../model/addtocart.dart';
 
 class Haleem extends StatefulWidget {
   @override
@@ -8,7 +11,32 @@ class Haleem extends StatefulWidget {
 class _HaleemCardState extends State<Haleem> {
   List<Map<String, String>> favoriteItems = [];
 
-  void toggleFavorite(String imagePath, String title, String price, bool isFavorite) {
+  @override
+  void initState() {
+    super.initState();
+    loadFavoriteItems();
+  }
+
+  Future<void> loadFavoriteItems() async {
+    final items = await DBHelper.getItems();
+    setState(() {
+      favoriteItems = items
+          .map((item) => {
+        'imagePath': item['imagePath'] as String,
+        'title': item['title'] as String,
+        'price': item['price'] as String,
+      })
+          .toList();
+    });
+  }
+
+  void toggleFavorite(String imagePath, String title, String price, bool isFavorite) async {
+    if (isFavorite) {
+      await DBHelper.insertItem(imagePath, title, price);
+    } else {
+      await DBHelper.deleteItem(imagePath);
+    }
+
     setState(() {
       if (isFavorite) {
         favoriteItems.add({
@@ -22,30 +50,29 @@ class _HaleemCardState extends State<Haleem> {
     });
   }
 
-  // List of Haleem items with their details
   final List<Map<String, String>> haleemItems = [
     {
       'image': 'assets/images/cuisine/haleem/Beef_Haleem.jpeg',
       'description': 'Beef Haleem',
-      'price': '\$13.99',
+      'price': 'Rs. 999',
       'deliveryTime': '10-15 min delivery',
     },
     {
       'image': 'assets/images/cuisine/haleem/Chicken_Haleem.jpeg',
       'description': 'Chicken Haleem',
-      'price': '\$12.99',
+      'price': 'Rs. 899',
       'deliveryTime': '10-15 min delivery',
     },
     {
       'image': 'assets/images/cuisine/haleem/Mutton_Haleem.jpeg',
       'description': 'Mutton Haleem',
-      'price': '\$14.99',
+      'price': 'Rs. 1099',
       'deliveryTime': '10-15 min delivery',
     },
     {
       'image': 'assets/images/cuisine/haleem/Shahi_Haleem.jpeg',
       'description': 'Shahi Haleem',
-      'price': '\$11.99',
+      'price': 'Rs. 799',
       'deliveryTime': '10-15 min delivery',
     },
   ];
@@ -54,15 +81,7 @@ class _HaleemCardState extends State<Haleem> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Haleem', style: TextStyle(fontWeight: FontWeight.bold),),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.favorite),
-            onPressed: () {
-              // Add your favorite page navigation here
-            },
-          ),
-        ],
+        title: Text('Haleem', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -80,7 +99,6 @@ class _HaleemCardState extends State<Haleem> {
     );
   }
 }
-
 class HaleemCardItem extends StatefulWidget {
   final String imagePath;
   final String title;
@@ -104,6 +122,33 @@ class _HaleemCardItemState extends State<HaleemCardItem> {
   bool isFavorite = false;
 
   @override
+  void initState() {
+    super.initState();
+    loadFavoriteState();
+  }
+
+  Future<void> loadFavoriteState() async {
+    final favorite = await DBHelper.isFavorite(widget.imagePath);
+    setState(() {
+      isFavorite = favorite;
+    });
+  }
+
+  void addToCart() async {
+    CartItem newItem = CartItem(
+      imagePath: widget.imagePath,
+      title: widget.title,
+      price: widget.price,
+      quantity: 1,
+    );
+    await DbHelper.insertCartItem(newItem);
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('${widget.title} added to cart!'),
+    ));
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
@@ -117,16 +162,30 @@ class _HaleemCardItemState extends State<HaleemCardItem> {
           children: [
             Stack(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(15),
-                    topRight: Radius.circular(15),
-                  ),
-                  child: Image.asset(
-                    widget.imagePath,
-                    width: 450,
-                    height: 180,
-                    fit: BoxFit.cover,
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HaleemDialog(
+                          imagePath: widget.imagePath,
+                          title: widget.title,
+                          price: widget.price,
+                        ),
+                      ),
+                    );
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(15),
+                      topRight: Radius.circular(15),
+                    ),
+                    child: Image.asset(
+                      widget.imagePath,
+                      width: 450,
+                      height: 180,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
                 Positioned(
@@ -158,16 +217,12 @@ class _HaleemCardItemState extends State<HaleemCardItem> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Left side text: Title, Price, and Delivery Time
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         widget.title,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                        ),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
                       ),
                       SizedBox(height: 5),
                       Text(
@@ -181,11 +236,16 @@ class _HaleemCardItemState extends State<HaleemCardItem> {
                       ),
                     ],
                   ),
-                  // Right side: Add to Cart button
                   ElevatedButton(
-                    onPressed: () {},
-                    child: Text('Add to Cart', style: TextStyle(color: Colors.white),),
+                    onPressed: () {
+                      addToCart();
+                    },
+                    child: Text(
+                      'Add to Cart',
+                      style: TextStyle(color: Colors.white),
+                    ),
                     style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: 42, vertical: 15),
                       backgroundColor: Color(0xff2C3E50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -193,6 +253,78 @@ class _HaleemCardItemState extends State<HaleemCardItem> {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class HaleemDialog extends StatelessWidget {
+  final String imagePath;
+  final String title;
+  final String price;
+
+  HaleemDialog({
+    required this.imagePath,
+    required this.title,
+    required this.price,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    String description = '';
+    if (title == 'Beef Haleem') {
+      description = 'Beef Haleem is a hearty, rich dish made with tender beef and spices.';
+    } else if (title == 'Chicken Haleem') {
+      description = 'Chicken Haleem is a warm, spicy dish made with chicken and a blend of flavorful spices.';
+    } else if (title == 'Mutton Haleem') {
+      description = 'Mutton Haleem is made with succulent mutton pieces and slow-cooked to perfection.';
+    } else if (title == 'Shahi Haleem') {
+      description = 'Shahi Haleem is a royal delicacy, a blend of spices, meat, and grains cooked together.';
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Image.asset(imagePath),
+            ),
+            SizedBox(height: 20),
+            Text(
+              title,
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text(
+              price,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+            ),
+            SizedBox(height: 20),
+            Text(
+              description,
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 20),
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+
+                },
+                child: Text('Place Order', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 40),
+                  backgroundColor: Color(0xff2C3E50),
+                ),
               ),
             ),
           ],
